@@ -1,55 +1,58 @@
 import tensorflow as tf
 
 class Model(object):
-    def __init__(self, save_path=None, sess=None, **kwargs):
+    def __init__(self, config):
         """
         Initiates the model process
         """
-        self.lr = kwargs["learning_rate"]
-        self.batch_size = kwargs["batch_size"]
-        self.gstep = tf.Variable(0, dtype=tf.int32, trainable=False, name="global_step")
-        self.isTraining = kwargs["isTraining"]
+        self.config = config
+
+        self.curr_epoch = tf.Variable(0, dtype=tf.int32, trainable=False, name="curr_epoch")
+        self.increment_epoch_counter = tf.assign(self.curr_epoch, self.curr_epoch + 1)
+
+        self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name="global_step")
+
+        self.saver = tf.train.Saver(max_to_keep=None)
 
     def build_model(self):
         """
         Sets up the computation graph
         """
-        self.inference()
+        self.build_network()
         self.loss()
         self.optimize()
         self.evaluate()
-        self.summary()
 
     def loss(self):
         """
         Defines the loss function
         """
-        with tf.name_scope('loss'):
-            self.loss = None
+        raise NotImplementedError
 
     def optimize(self):
         """
         Defines the optimizer function
         """
-        self.optimizer = None #tf.train.AdamOptimizer(self.lr).minize(self.loss, global_step=self.gstep)
+        raise NotImplementedError
 
     def evaluate(self):
         """
         Evaluates the accuracy of the network
         """
-        with tf.name_scope("accuracy"):
-            self.accuracy = None
+        raise NotImplementedError
 
-    def inference(self,input,output):
-        """
-        Creates the neural network architecture
-        (Optionally define the architecture in another file)
-        """
-        self.input = tf.placeholder()
-        self.true_output = tf.placeholder()
-        pass
+    def restore_model(self, sess):
+        if config["checkpoint_path"] is not None:
+            checkpoint = tf.train.latest_checkpoint(config["checkpoint_path"])
+            self.saver.restore(sess, checkpoint)
+            print("Loaded model from latest checkpoint:", checkpoint)
 
-    def restore_model(self, save_path):
-        if save_path is not None:
-            saver = tf.train.Saver()
-            saver.restore(sess, save_path)
+    def save_model(self, sess):
+        self.saver.save(sess, self.config["checkpoint_path"], self.global_step)
+        print("Saved model")
+
+    def build_network(self):
+        """
+        Creates Neural Network architecture
+        """
+        raise NotImplementedError

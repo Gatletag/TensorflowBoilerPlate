@@ -13,11 +13,13 @@ class Dataset(object):
         try:
             self.load_dataset()
         except:
+            print("Staring Data preparation")
             self.labels = pd.read_csv(label_file, ).values
             self.labels =self.labels[1:]
             onehot_labels = self.one_hot_encode()
             self.data = np.column_stack((self.labels[:,0], onehot_labels))
             self.input_folder = input_folder
+            print("...")
 
             if shuffle:
                 self.shuffle_set()
@@ -25,7 +27,9 @@ class Dataset(object):
             train, test = self.split_set()
             self.train_x, self.train_y = self.load_input(train)
             self.test_x, self.test_y = self.load_input(test)
+            print("Saving dataset to file")
             self.save_dataset()
+            print("Done saving dataset")
 
     def shuffle_set(self):
         idxs = np.arange(self.data.shape[0])
@@ -41,7 +45,7 @@ class Dataset(object):
         data = []
         for file in dataset[:,0]:
             data.append(sc.ndimage.imread(self.input_folder+"/"+str(file)+".png"))
-        return np.array(data), dataset[:,1]
+        return np.array(data), dataset[:,1:]
 
     def one_hot_encode(self):
         label_encoder = LabelEncoder()
@@ -53,13 +57,13 @@ class Dataset(object):
         return onehot_encoded
 
     def save_dataset(self):
-        np.save(self.data_folder+"train_x.npy", self.train_x)
-        np.save(self.data_folder+"train_y.npy", self.train_y)
-        np.save(self.data_folder+"test_x.npy", self.test_x)
-        np.save(self.data_folder+"test_y.npy", self.test_y)
+        np.save(self.data_folder+"/train_x.npy", self.train_x)
+        np.save(self.data_folder+"/train_y.npy", self.train_y)
+        np.save(self.data_folder+"/test_x.npy", self.test_x)
+        np.save(self.data_folder+"/test_y.npy", self.test_y)
 
     def load_dataset(self):
-        self.train_x = np.load(self.data_folder+"train_x.npy")
-        self.train_y = np.load(self.data_folder+"train_y.npy")
-        self.test_x = np.load(self.data_folder+"test_x.npy")
-        self.test_y = np.load(self.data_folder+"test_y.npy")
+        self.train_x = np.load(self.data_folder+"/train_x.npy")
+        self.train_y = np.load(self.data_folder+"/train_y.npy")
+        self.test_x = np.load(self.data_folder+"/test_x.npy")
+        self.test_y = np.load(self.data_folder+"/test_y.npy")
