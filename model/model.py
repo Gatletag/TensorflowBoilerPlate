@@ -1,4 +1,6 @@
 import tensorflow as tf
+from utils.utils import create_directories
+import os
 
 class Model(object):
     def __init__(self, config):
@@ -12,7 +14,7 @@ class Model(object):
 
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name="global_step")
 
-        self.saver = tf.train.Saver(max_to_keep=None)
+        # self.saver = tf.train.Saver()
 
     def build_model(self):
         """
@@ -41,14 +43,19 @@ class Model(object):
         """
         raise NotImplementedError
 
-    def restore_model(self, sess):
-        if config["checkpoint_path"] is not None:
-            checkpoint = tf.train.latest_checkpoint(config["checkpoint_path"])
-            self.saver.restore(sess, checkpoint)
-            print("Loaded model from latest checkpoint:", checkpoint)
+    def restore_model(self, saver, sess):
+        if self.config["checkpoint_path"] is not None:
+            try:
+                checkpt_loc = self.config["checkpoint_path"]+"/checkpoint"
+                ckpt = tf.train.get_checkpoint_state(os.path.dirname(checkpt_loc))
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                print("Loaded model from latest checkpoint:", ckpt)
+            except:
+                print("No Previous Model")
 
-    def save_model(self, sess):
-        self.saver.save(sess, self.config["checkpoint_path"], self.global_step)
+    def save_model(self, sess, saver, step):
+        # create_directories([self.config["checkpoint_path"]])
+        saver.save(sess, self.config["checkpoint_path"]+"/"+self.config["checkpoint_folder"], step)
         print("Saved model")
 
     def build_network(self):

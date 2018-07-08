@@ -2,17 +2,25 @@ import tensorflow as tf
 import numpy as np
 
 class Train(object):
-    def __init__(self, sess, model, dataset):
+    def __init__(self, sess, model, saver, dataset, logger):
         self.sess = sess
         self.model = model
         self.dataset = dataset
-        # self.logger = logger
-        self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-        self.sess.run(self.init)
+        self.logger = logger
+        self.saver = saver
+        # self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+        # self.sess.run(self.init)
+        # try:
+        #     self.model.restore_model(self.sess)
+        # except Exception:
+        #     print("No previous model to restore from.")
+
 
     def train(self, total_epochs):
         saved_epoch_for_model = self.model.curr_epoch.eval(self.sess)
-        for epoch in range(saved_epoch_for_model, total_epochs, 1):
+        global_step = self.model.global_step.eval(self.sess)
+
+        for epoch in range(saved_epoch_for_model, total_epochs):
             self.train_epoch()
             self.sess.run(self.model.increment_epoch_counter)
 
@@ -38,16 +46,14 @@ class Train(object):
         print("Accuracy for " + str(curr_epoch) + ": " + str(mean_accuracy) +" +/- " + str(std_accuracy))
         # TODO: add weights to summaries and gradients (?)
 
-        summmaries = {
+        summaries = {
             "loss": mean_loss,
-            "accuracy": mean_accuracy,
-            "stdloss": std_loss,
-            "stdaccuracy": std_accuracy
+            "accuracy": mean_accuracy
         }
 
-        # self.logger.add_to_summary(curr_iteration, curr_epoch, summaries=summaries)
-
-        # self.model.save(self.sess)
+        self.logger.add_to_summary(curr_iteration, curr_epoch, summaries)
+        self.model.save_model(self.sess, self.saver,curr_epoch)
+        # self.saver.save(self.sess, "checkpoints/convnet_layers/mnist-convnet", curr_epoch)
 
         self.dataset.reset_iterator()
 

@@ -12,27 +12,32 @@ class TestModel(Model):
         self.input = tf.placeholder(tf.float32, [None, 32, 32, 3])
         self.labels = tf.placeholder(tf.int32, [None,10])
 
-        initializer = tf.variance_scaling_initializer(scale=2.0)
-        conv1 = tf.layers.Conv2D(filters=20,kernel_size=(3,3),padding='same',
-                             data_format='channels_last',use_bias=True,activation=tf.nn.relu,kernel_initializer=initializer)
-        conv2 = tf.layers.Conv2D(filters=20,kernel_size=(3,3),padding='same',
-                             data_format='channels_last',use_bias=True,activation=tf.nn.relu,kernel_initializer=initializer)
-        mp1 = tf.layers.MaxPooling2D(pool_size=(2,2),strides=(2,2),padding='valid')
-        conv3 = tf.layers.Conv2D(filters=16,kernel_size=(3,3),padding='same',
-                             data_format='channels_last',use_bias=True,activation=tf.nn.relu,kernel_initializer=initializer)
-        conv4 = tf.layers.Conv2D(filters=16,kernel_size=(3,3),padding='same',
-                             data_format='channels_last',use_bias=True,activation=tf.nn.relu,kernel_initializer=initializer)
-        mp2 = tf.layers.MaxPooling2D(pool_size=(2,2),strides=(2,2),padding='valid')
-        conv5 = tf.layers.Conv2D(filters=16,kernel_size=(3,3),padding='same',
-                             data_format='channels_last',use_bias=True,activation=tf.nn.relu,kernel_initializer=initializer)
-        ft = tf.layers.Flatten()
-        fc1 = tf.layers.Dense(64,kernel_initializer=initializer)
-        fc2 = tf.layers.Dense(10,kernel_initializer=initializer)
-        layer = [conv1,conv2,mp1,conv3,conv4,mp2,conv5,ft,fc1,fc2]#
+        conv1 = tf.layers.conv2d(inputs=self.input,
+                                  filters=32,
+                                  kernel_size=[5, 5],
+                                  padding='SAME',
+                                  activation=tf.nn.relu,
+                                  name='conv1')
+        pool1 = tf.layers.max_pooling2d(inputs=conv1,
+                                        pool_size=[2, 2],
+                                        strides=2,
+                                        name='pool1')
 
-        model = tf.keras.Sequential(layer)
-        # self.logits = tf.layers.dense(fc1, 10)
-        self.logits = model(self.input)
+        conv2 = tf.layers.conv2d(inputs=pool1,
+                                  filters=64,
+                                  kernel_size=[5, 5],
+                                  padding='SAME',
+                                  activation=tf.nn.relu,
+                                  name='conv2')
+        pool2 = tf.layers.max_pooling2d(inputs=conv2,
+                                        pool_size=[2, 2],
+                                        strides=2,
+                                        name='pool2')
+
+        feature_dim = pool2.shape[1] * pool2.shape[2] * pool2.shape[3]
+        pool2 = tf.reshape(pool2, [-1, feature_dim])
+        fc = tf.layers.dense(pool2, 1024, activation=tf.nn.relu, name='fc')
+        self.logits = tf.layers.dense(pool2, 10, name='logits')
 
     def loss(self):
         with tf.name_scope('loss'):
