@@ -13,8 +13,7 @@ class Model(object):
         self.increment_epoch_counter = tf.assign(self.curr_epoch, self.curr_epoch + 1)
 
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name="global_step")
-
-        # self.saver = tf.train.Saver()
+        self.isTraining = tf.placeholder(tf.bool, name='is_training')
 
     def build_model(self):
         """
@@ -55,7 +54,7 @@ class Model(object):
 
     def save_model(self, sess, saver, step):
         # create_directories([self.config["checkpoint_path"]])
-        saver.save(sess, self.config["checkpoint_path"]+"/"+self.config["checkpoint_folder"], step)
+        saver.save(sess, self.config["checkpoint_path"]+"/"+self.config["checkpoint_name"], step)
         print("Saved model")
 
     def build_network(self):

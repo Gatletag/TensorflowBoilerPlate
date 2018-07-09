@@ -17,3 +17,9 @@ source .venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
+
+# STILL TO DO
+
+- add testing phase
+- add ability to create directories for checkpoints and graphs
+- visualisation tools (gradient ascent)

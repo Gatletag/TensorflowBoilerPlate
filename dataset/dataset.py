@@ -27,6 +27,9 @@ class Dataset(object):
             train, test = self.split_set()
             self.train_x, self.train_y = self.load_input(train)
             self.test_x, self.test_y = self.load_input(test)
+
+            self.normalise_data()
+
             print("Saving dataset to file")
             self.save_dataset()
             print("Done saving dataset")
@@ -56,14 +59,27 @@ class Dataset(object):
         self.classes = label_encoder.classes_
         return onehot_encoded
 
+    def normalise_data(self):
+        self.mean = np.mean(self.train_x)
+        print(self.mean)
+        self.std = np.std(self.train_x)
+        print(self.std)
+
+        self.train_x = ( self.train_x - self.mean ) / self.std
+        self.test_x = ( self.test_x - self.mean ) / self.std
+
     def save_dataset(self):
         np.save(self.data_folder+"/train_x.npy", self.train_x)
         np.save(self.data_folder+"/train_y.npy", self.train_y)
         np.save(self.data_folder+"/test_x.npy", self.test_x)
         np.save(self.data_folder+"/test_y.npy", self.test_y)
+        np.save(self.data_folder+"/mean.npy", self.mean)
+        np.save(self.data_folder+"/std.npy", self.std)
 
     def load_dataset(self):
         self.train_x = np.load(self.data_folder+"/train_x.npy")
         self.train_y = np.load(self.data_folder+"/train_y.npy")
         self.test_x = np.load(self.data_folder+"/test_x.npy")
         self.test_y = np.load(self.data_folder+"/test_y.npy")
+        self.mean = np.load(self.data_folder+"/mean.npy")
+        self.std = np.load(self.data_folder+"/std.npy")
